@@ -7,5 +7,3 @@ try:
 except ImportError:  # pragma: no cover
     # Not installed or in install (not yet installed) so ignore
     pass
-
-__version__ = '1.2.3'
