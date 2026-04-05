@@ -201,6 +201,12 @@ class OpenAPIWrapper:
         self.openapi = OpenAPI.from_dict(spec)
         self.op = OperationsCollection(self)
 
+    def __getstate__(self) -> object:
+        return (self.spec, self.base_url)
+
+    def __setstate__(self, state):
+        self.__init__(*state)
+
 
 class EsiApp(object):
     """ EsiApp is an app object that'll allows us to play with ESI Meta
