@@ -35,10 +35,15 @@ class OpenAPIWrapper:
 class OperationProxy:
     """Proxy object to make OpenAPI operations compatible with pyswagger interface"""
     
-    def __init__(self, operation_id, openapi_wrapper):
+    def __init__(self, operation_id, operation, openapi_wrapper: OpenAPIWrapper):
         self.operation_id = operation_id
         self.openapi_wrapper = openapi_wrapper
         self.url = self._extract_url()
+        self._operation = operation
+
+    @property
+    def security(self):
+        return self._operation.get('security', None)
     
     def _extract_url(self) -> str | None:
         """Extract URL from the OpenAPI spec for this operation"""
@@ -191,7 +196,7 @@ class OperationsCollection:
             for method, operation in methods.items():
                 operation_id = operation.get('operationId')
                 if operation_id:
-                    self._operations[operation_id] = OperationProxy(operation_id, self.openapi_wrapper)
+                    self._operations[operation_id] = OperationProxy(operation_id, operation, self.openapi_wrapper)
     
     def __getitem__(self, key) -> OperationProxy:
         if key in self._operations:

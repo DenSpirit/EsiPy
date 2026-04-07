@@ -16,6 +16,7 @@ from requests.exceptions import (
 from requests.adapters import HTTPAdapter
 
 from esipy.app import MockRequest, MockResponse, OperationRequest
+from esipy.security import EsiSecurity
 
 from .events import API_CALL_STATS
 from .utils import make_cache_key
@@ -39,7 +40,7 @@ class EsiClient:
     __schemes__ = set(['https'])
     __uncached_methods__ = ['POST', 'PUT', 'DELETE', 'HEAD']
 
-    def __init__(self, security=None, retry_requests=False, **kwargs):
+    def __init__(self, security: EsiSecurity | None = None, retry_requests=False, **kwargs):
         """ Init the ESI client object
 
         :param security: (optional) the security object [default: None]
@@ -375,6 +376,10 @@ class EsiClient:
             handle_files=False
         )
         request._patch(opt)
+
+        # inject access token into session if it exists
+        if self.security and self.security.access_token:
+            self._session.headers['Authorization'] = f'Bearer {self.security.access_token}'
 
         # prepare the request and make it.
         method = method or request.method.upper()

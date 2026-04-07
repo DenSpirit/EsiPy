@@ -109,7 +109,7 @@ class EsiSecurity(object):
         # token data
         self.token_identifier = kwargs.pop('token_identifier', None)
         self.refresh_token = None
-        self.access_token = None
+        self.access_token: str | None = None
         self.token_expiry = None
 
         # other stuff
