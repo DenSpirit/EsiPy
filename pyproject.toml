@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
 [tool.coverage.run]
 source = ["esipy"]
@@ -57,3 +57,58 @@ max-args = 10
 max-locals = 20
 max-branches = 15
 max-statements = 60
+
+[project]
+name = "EsiPy"
+dynamic = ["version"]
+description = "Swagger Client for the ESI API for EVE Online"
+readme = "README.rst"
+requires-python = ">=3.8"
+license = {text = "BSD 3-Clause License"}
+authors = [
+    {name = "Kyria", email = "anakhon@gmail.com"},
+]
+dependencies = [
+    "requests",
+    "openapi-core >= 0.19.0",
+    "pytz",
+    "python-jose >= 3.0 , < 4",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+
+[project.urls]
+Homepage = "https://github.com/Kyria/EsiPy"
+
+[tool.hatch.build.targets.wheel]
+packages = ["esipy"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "esipy/_version.py"
+
+[dependency-groups]
+dev = [
+    "openapi-core==0.19.0",
+    "python-jose<4",
+    "pytz",
+    "requests",
+    "coverage",
+    "coveralls",
+    "httmock",
+    "nose",
+    "python-memcached",
+    "redis",
+    "diskcache",
+]
