@@ -15,6 +15,8 @@ from requests.exceptions import (
 )
 from requests.adapters import HTTPAdapter
 
+from esipy.app import MockRequest, OperationRequest
+
 from .events import API_CALL_STATS
 from .utils import make_cache_key
 from .utils import check_cache
@@ -29,7 +31,6 @@ CachedResponse = namedtuple(
     'CachedResponse',
     ['status_code', 'headers', 'content', 'url']
 )
-
 
 class EsiClient:
     """ EsiClient is an OpenAPI client that provides ESI-specific functionality
@@ -107,7 +108,7 @@ class EsiClient:
         """Prepare schemes for request - compatibility method"""
         return ['https']
 
-    def _retry_request(self, req_and_resp, _retry=0, **kwargs):
+    def _retry_request(self, req_and_resp: OperationRequest, _retry=0, **kwargs):
         """Uses self._request in a sane retry loop (for 5xx level errors).
 
         Do not use the _retry parameter, use the same params as _request
@@ -186,7 +187,7 @@ class EsiClient:
 
         return results
 
-    def _request(self, req_and_resp, **kwargs):
+    def _request(self, req_and_resp: OperationRequest, **kwargs):
         """ Take a request_and_response object from pyswagger.App and
         check auth, token, headers, prepare the actual request and fill the
         response
@@ -334,7 +335,7 @@ class EsiClient:
                     res.headers)
                 warnings.warn("[%s] returned expired result" % res.url)
 
-    def __make_request(self, request, opt, cache_key=None, method=None):
+    def __make_request(self, request: MockRequest, opt, cache_key=None, method=None):
         """ Check cache, deal with expiration and etag, make the request and
         return the response or cached response.
 
@@ -383,7 +384,7 @@ class EsiClient:
                 method=method,
                 url=request.url,
                 params=request.query,
-                data=request.data,
+                json=request.json,
                 headers=request.header
             )
         )

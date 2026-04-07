@@ -50,9 +50,9 @@ class OperationProxy:
                     return path
         return None
     
-    def __call__(self, **kwargs):
+    def __call__(self, data=None, **kwargs):
         """Create a request object compatible with EsiClient"""
-        return OperationRequest(self.operation_id, self.openapi_wrapper, **kwargs)
+        return OperationRequest(self.operation_id, self.openapi_wrapper, data, **kwargs)
 
 
 class MockResponse:
@@ -91,7 +91,7 @@ class MockResponse:
 class MockRequest:
     """Mock request object compatible with pyswagger interface"""
     
-    def __init__(self, operation_id, openapi_wrapper, **params):
+    def __init__(self, operation_id, openapi_wrapper, data, **params):
         self.operation_id = operation_id
         self.openapi_wrapper = openapi_wrapper
         self.params = params
@@ -100,7 +100,7 @@ class MockRequest:
         self._p = self._build_params()
         self.query = {}
         self.header = {}
-        self.data = None
+        self.json = data
         
     def reset(self):
         """Reset request for reuse"""
@@ -158,8 +158,8 @@ class MockRequest:
 class OperationRequest:
     """Request object compatible with EsiClient - returns tuple of (request, response)"""
     
-    def __init__(self, operation_id, openapi_wrapper, **params):
-        self.request = MockRequest(operation_id, openapi_wrapper, **params)
+    def __init__(self, operation_id, openapi_wrapper, data, **params):
+        self.request = MockRequest(operation_id, openapi_wrapper, data, **params)
         self.response = MockResponse()
     
     def __iter__(self):
