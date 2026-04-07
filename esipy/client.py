@@ -15,7 +15,7 @@ from requests.exceptions import (
 )
 from requests.adapters import HTTPAdapter
 
-from esipy.app import MockRequest, OperationRequest
+from esipy.app import MockRequest, MockResponse, OperationRequest
 
 from .events import API_CALL_STATS
 from .utils import make_cache_key
@@ -187,7 +187,7 @@ class EsiClient:
 
         return results
 
-    def _request(self, req_and_resp: OperationRequest, **kwargs):
+    def _request(self, req_and_resp: OperationRequest, **kwargs) -> MockResponse:
         """ Take a request_and_response object from pyswagger.App and
         check auth, token, headers, prepare the actual request and fill the
         response
