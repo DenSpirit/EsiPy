@@ -2,6 +2,7 @@
 """ App entry point. Uses Esi Meta Endpoint to work """
 import time
 
+import re
 import logging
 import requests
 from urllib.error import HTTPError
@@ -13,6 +14,22 @@ from .utils import get_cache_time_left
 from .exceptions import APIException
 
 LOGGER = logging.getLogger(__name__)
+
+class OpenAPIWrapper:
+    """Wrapper to make openapi-core compatible with pyswagger interface"""
+
+    def __init__(self, spec, base_url):
+        self.spec = spec
+        self.base_url = base_url
+        self.openapi = OpenAPI.from_dict(spec)
+        self.op = OperationsCollection(self)
+
+    def __getstate__(self) -> object:
+        return (self.spec, self.base_url)
+
+    def __setstate__(self, state):
+        self.__init__(*state)
+
 
 
 class OperationProxy:
@@ -162,7 +179,7 @@ class OperationRequest:
 class OperationsCollection:
     """Collection of operations compatible with pyswagger app.op interface"""
     
-    def __init__(self, openapi_wrapper):
+    def __init__(self, openapi_wrapper: OpenAPIWrapper):
         self.openapi_wrapper = openapi_wrapper
         self._operations = {}
         self._build_operations()
@@ -177,7 +194,14 @@ class OperationsCollection:
                     self._operations[operation_id] = OperationProxy(operation_id, self.openapi_wrapper)
     
     def __getitem__(self, key):
-        return self._operations[key]
+        if key in self._operations:
+            return self._operations[key]
+        camelcased = re.sub(r'(^[a-z]|_[a-z])', lambda s: s.group(0).lstrip('_').upper(), key)
+        if camelcased in self._operations:
+            LOGGER.warning(f'ESI Sub {key}->{camelcased}')
+            return self._operations[camelcased]
+        else:
+            raise KeyError(key)
     
     def __contains__(self, key):
         return key in self._operations
@@ -190,22 +214,6 @@ class OperationsCollection:
     
     def items(self):
         return self._operations.items()
-
-
-class OpenAPIWrapper:
-    """Wrapper to make openapi-core compatible with pyswagger interface"""
-    
-    def __init__(self, spec, base_url):
-        self.spec = spec
-        self.base_url = base_url
-        self.openapi = OpenAPI.from_dict(spec)
-        self.op = OperationsCollection(self)
-
-    def __getstate__(self) -> object:
-        return (self.spec, self.base_url)
-
-    def __setstate__(self, state):
-        self.__init__(*state)
 
 
 class EsiApp(object):
@@ -245,7 +253,7 @@ class EsiApp(object):
             self.esi_meta_cache_key
         )
 
-    def __get_or_create_app(self, url, cache_key):
+    def __get_or_create_app(self, url, cache_key) -> OpenAPIWrapper:
         """ Get the app from cache or generate a new one if required
 
         Because app object doesn't have etag/expiry, we have to make
