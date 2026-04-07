@@ -40,7 +40,7 @@ class OperationProxy:
         self.openapi_wrapper = openapi_wrapper
         self.url = self._extract_url()
     
-    def _extract_url(self):
+    def _extract_url(self) -> str | None:
         """Extract URL from the OpenAPI spec for this operation"""
         spec = self.openapi_wrapper.spec
         for path, methods in spec.get('paths', {}).items():
@@ -193,7 +193,7 @@ class OperationsCollection:
                 if operation_id:
                     self._operations[operation_id] = OperationProxy(operation_id, self.openapi_wrapper)
     
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> OperationProxy:
         if key in self._operations:
             return self._operations[key]
         camelcased = re.sub(r'(^[a-z]|_[a-z])', lambda s: s.group(0).lstrip('_').upper(), key)
@@ -252,6 +252,7 @@ class EsiApp(object):
             self.meta_url,
             self.esi_meta_cache_key
         )
+        self.op = self.app.op
 
     def __get_or_create_app(self, url, cache_key) -> OpenAPIWrapper:
         """ Get the app from cache or generate a new one if required
@@ -350,22 +351,15 @@ class EsiApp(object):
         return app
 
     def __getattr__(self, name):
-        """ Return the request object depending on its nature.
-
-        if "op" is requested, simply return "app.op" which is a pyswagger app
-        if anything else is requested, check if it exists, then if it's a
-        swagger endpoint, try to create it and return it.
-        """
-        if name == 'op':
-            return self.app.op
+        """ Return the request object depending on its nature. """
 
         try:
-            op_attr = self.app.op[name]
+            op_attr = self.op[name]
         except KeyError:
             raise AttributeError('%s is not a valid operation' % name)
 
         # if the endpoint is a swagger spec
-        if 'swagger.json' in op_attr.url:
+        if op_attr.url and 'swagger.json' in op_attr.url:
             spec_url = 'https:%s' % op_attr.url
             cache_key = '%s:app:%s' % (self.cache_prefix, op_attr.url)
             return self.__get_or_create_app(spec_url, cache_key)
